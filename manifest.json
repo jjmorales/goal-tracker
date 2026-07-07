@@ -1,6 +1,6 @@
 {
-  "name": "The Chain — Daily Non-Negotiables",
-  "short_name": "The Chain",
+  "name": "goals",
+  "short_name": "goals",
   "description": "Daily non-negotiables and streak tracking tied to your bigger goals.",
   "start_url": "./index.html",
   "scope": "./",

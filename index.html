@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Chain — Daily Non-Negotiables</title>
+<title>goals</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
@@ -75,8 +75,11 @@
 
   /* ---------- App shell ---------- */
   #app{display:none; max-width:760px; margin:0 auto; padding:24px 20px 80px;}
-  header.top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
-  header.top h1{font-size:26px; margin:0;}
+  header.top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  header.top .badge{
+    font-family:'JetBrains Mono',monospace; font-size:20px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ember); border:1px solid var(--ember-dim); border-radius:4px; padding:4px 10px;
+  }
   header.top .date{color:var(--text-dim); font-size:14px;}
   .tabs{display:flex; gap:4px; margin:18px 0 22px; border-bottom:1px solid var(--border);}
   .tab{padding:10px 4px; margin-right:20px; color:var(--text-dim); font-size:14px; font-weight:500; border-bottom:2px solid transparent; cursor:pointer;}
@@ -220,7 +223,7 @@
 
 <div id="app">
   <header class="top">
-    <h1>The Chain</h1>
+    <span class="badge">Goals</span>
     <div class="date mono" id="todayDate"></div>
   </header>
 
