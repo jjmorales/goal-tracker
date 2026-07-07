@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Chain — Daily Non-Negotiables</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17181A">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#17181A;
+    --surface:#212327;
+    --surface-2:#2A2D31;
+    --border:#34373C;
+    --text:#EDEAE4;
+    --text-dim:#9C9891;
+    --ember:#E8622C;
+    --ember-dim:#5A3323;
+    --sage:#7C9473;
+    --brick:#8B3A3A;
+    --gold:#D4A24C;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.mono-label{
+    font-family:'Barlow Condensed',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  a{color:inherit;}
+  button{
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    border:none;
+    border-radius:8px;
+    padding:10px 16px;
+    font-size:14px;
+    font-weight:500;
+  }
+  button:focus-visible, input:focus-visible, .task-row:focus-visible{
+    outline:2px solid var(--ember);
+    outline-offset:2px;
+  }
+  .btn-primary{background:var(--ember); color:#1A0D08;}
+  .btn-primary:hover{background:#F27A47;}
+  .btn-ghost{background:transparent; color:var(--text-dim); border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text); border-color:var(--text-dim);}
+
+  /* ---------- Setup screen ---------- */
+  #setup{
+    max-width:440px; margin:12vh auto; padding:32px;
+    background:var(--surface); border-radius:var(--radius); border:1px solid var(--border);
+  }
+  #setup h1{font-size:28px; margin:0 0 4px;}
+  #setup p{color:var(--text-dim); font-size:14px; line-height:1.5;}
+  #setup label{display:block; font-size:12px; color:var(--text-dim); margin:16px 0 6px; text-transform:uppercase; letter-spacing:0.05em;}
+  #setup input{
+    width:100%; padding:10px 12px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:8px; color:var(--text); font-size:14px;
+  }
+  #setup .row{display:flex; gap:10px;}
+  #setup .row > div{flex:1;}
+  #setupError{color:var(--brick); font-size:13px; margin-top:10px; display:none;}
+
+  /* ---------- App shell ---------- */
+  #app{display:none; max-width:760px; margin:0 auto; padding:24px 20px 80px;}
+  header.top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+  header.top h1{font-size:26px; margin:0;}
+  header.top .date{color:var(--text-dim); font-size:14px;}
+  .tabs{display:flex; gap:4px; margin:18px 0 22px; border-bottom:1px solid var(--border);}
+  .tab{padding:10px 4px; margin-right:20px; color:var(--text-dim); font-size:14px; font-weight:500; border-bottom:2px solid transparent; cursor:pointer;}
+  .tab.active{color:var(--text); border-bottom-color:var(--ember);}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; margin-bottom:16px;}
+  .card h2{font-size:20px; margin:0 0 14px;}
+  .card h3{font-size:16px; margin:0; text-transform:none; letter-spacing:0; font-family:'Inter'; font-weight:600;}
+
+  /* Today checklist */
+  .today-summary{display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+  .ring{width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .ring span{font-family:'JetBrains Mono'; font-weight:700; font-size:14px;}
+  .today-summary .label{font-size:13px; color:var(--text-dim);}
+  .task-row{
+    display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border);
+  }
+  .task-row:last-child{border-bottom:none;}
+  .check{
+    width:26px; height:26px; border-radius:6px; border:2px solid var(--border); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; background:var(--surface-2);
+  }
+  .check.done{background:var(--ember); border-color:var(--ember); color:#1A0D08; font-weight:700;}
+  .check.avoid-done{background:var(--sage); border-color:var(--sage); color:#111; font-weight:700;}
+  .task-info{flex:1; min-width:0;}
+  .task-info .title{font-size:15px; font-weight:500;}
+  .task-info .goal-tag{font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.04em;}
+  .streak-badge{font-family:'JetBrains Mono'; font-size:13px; color:var(--ember); font-weight:700; white-space:nowrap;}
+  .streak-badge.sage{color:var(--sage);}
+
+  /* Chain visual */
+  .chain-row{margin-top:8px;}
+  .chain-links{display:flex; gap:3px; margin-top:6px; flex-wrap:wrap;}
+  .link{
+    width:14px; height:20px; border-radius:5px; background:var(--surface-2); border:1px solid var(--border);
+    position:relative;
+  }
+  .link.lit{background:var(--ember); border-color:var(--ember);}
+  .link.lit-sage{background:var(--sage); border-color:var(--sage);}
+  .link.broken{background:var(--brick); border-color:var(--brick); opacity:0.7;}
+  .link.future{opacity:0.25;}
+
+  /* Substance-free counters */
+  .counter-grid{display:flex; gap:12px; flex-wrap:wrap;}
+  .counter-card{
+    flex:1; min-width:140px; background:var(--surface-2); border-radius:8px; padding:16px;
+    border:1px solid var(--border); text-align:center;
+  }
+  .counter-card .num{font-family:'JetBrains Mono'; font-size:32px; font-weight:700; color:var(--sage);}
+  .counter-card .num.broken{color:var(--brick);}
+  .counter-card .lbl{font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-top:4px;}
+  .counter-card .best{font-size:11px; color:var(--text-dim); margin-top:6px;}
+
+  /* Goals */
+  .goal-card{margin-bottom:14px;}
+  .goal-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .goal-metric{font-family:'JetBrains Mono'; font-size:13px; color:var(--text-dim);}
+  .progress-track{height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
+  .progress-fill{height:100%; background:linear-gradient(90deg,var(--ember),var(--gold));}
+  .goal-update{display:flex; gap:8px; margin-top:10px;}
+  .goal-update input{
+    flex:1; padding:8px 10px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:6px; color:var(--text); font-size:13px; font-family:'JetBrains Mono';
+  }
+
+  .day-nav{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .day-nav button{background:var(--surface-2); color:var(--text); padding:6px 12px; border:1px solid var(--border);}
+  .day-nav button:hover{border-color:var(--text-dim);}
+  .day-nav .viewing-label{font-size:13px; color:var(--text-dim); flex:1;}
+  .day-nav .today-pill{background:var(--ember); color:#1A0D08; padding:6px 12px; font-weight:600;}
+
+  .week-scroll{position:relative;}
+  .week-scroll::after{
+    content:''; position:absolute; top:0; right:0; bottom:0; width:24px;
+    background:linear-gradient(to right, transparent, var(--surface));
+    pointer-events:none;
+  }
+  .week-table{width:100%; border-collapse:collapse; font-size:13px;}
+  .week-table th{font-weight:500; color:var(--text-dim); font-size:11px; text-transform:uppercase; padding:4px 4px; text-align:center;}
+  .week-table td{padding:4px; text-align:center;}
+  .week-task-name{text-align:left !important; padding-right:8px; font-size:13px; max-width:140px;}
+  .week-task-name .goal-tag{display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase;}
+  .week-cell{
+    width:30px; height:30px; border-radius:6px; background:var(--surface-2); border:1px solid var(--border);
+    cursor:pointer; margin:0 auto; display:flex; align-items:center; justify-content:center; font-weight:700;
+  }
+  .week-cell.done{background:var(--ember); border-color:var(--ember); color:#1A0D08;}
+  .week-cell.done.avoid{background:var(--sage); border-color:var(--sage);}
+  .week-cell.today-col{outline:1px solid var(--gold);}
+  .week-rate{font-family:'JetBrains Mono'; color:var(--text-dim); font-size:12px; margin-top:10px;}
+
+  .empty{color:var(--text-dim); font-size:14px; text-align:center; padding:20px 0;}
+  .add-task-form{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;}
+  .add-task-form input, .add-task-form select{
+    padding:9px 10px; background:var(--surface-2); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px;
+  }
+  .add-task-form input[type=text]{flex:1; min-width:140px;}
+
+  #saveStatus{position:fixed; bottom:16px; right:16px; font-size:12px; color:var(--text-dim); background:var(--surface); border:1px solid var(--border); padding:6px 12px; border-radius:20px; opacity:0; transition:opacity .3s;}
+  #saveStatus.show{opacity:1;}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<div id="setup">
+  <h1>The Chain</h1>
+  <p>Connects to a JSON file in your own GitHub repo — same pattern as the cookbook app. Nothing leaves your browser except direct calls to GitHub's API.</p>
+  <label for="ghToken">Personal Access Token</label>
+  <input id="ghToken" type="password" placeholder="ghp_...">
+  <div class="row">
+    <div>
+      <label for="ghOwner">Repo owner</label>
+      <input id="ghOwner" type="text" placeholder="jonathan">
+    </div>
+    <div>
+      <label for="ghRepo">Repo name</label>
+      <input id="ghRepo" type="text" placeholder="portfolio">
+    </div>
+  </div>
+  <label for="ghPath">Data file path</label>
+  <input id="ghPath" type="text" placeholder="data/tracker.json" value="data/tracker.json">
+  <button class="btn-primary" style="width:100%; margin-top:20px;" onclick="connectGitHub()">Connect</button>
+  <div id="setupError"></div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <h1>The Chain</h1>
+    <div class="date mono" id="todayDate"></div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="today" onclick="switchTab('today')">Today</div>
+    <div class="tab" data-tab="week" onclick="switchTab('week')">Week</div>
+    <div class="tab" data-tab="goals" onclick="switchTab('goals')">Goals</div>
+    <div class="tab" data-tab="manage" onclick="switchTab('manage')">Manage</div>
+  </div>
+
+  <div id="tab-today"></div>
+  <div id="tab-week" style="display:none;"></div>
+  <div id="tab-goals" style="display:none;"></div>
+  <div id="tab-manage" style="display:none;"></div>
+</div>
+
+<div id="saveStatus">Saved</div>
+
+<script>
+const API = 'https://api.github.com';
+let CFG = null;
+let DATA = null;
+let SHA = null;
+let saveTimer = null;
+let viewDate = null; // date currently shown/edited on the Today tab; defaults to today
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function dateStrOffset(offsetDays){
+  const d = new Date();
+  d.setDate(d.getDate()+offsetDays);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+/* ---------------- GitHub storage ---------------- */
+async function ghRequest(method, body){
+  const url = `${API}/repos/${CFG.owner}/${CFG.repo}/contents/${CFG.path}`;
+  const res = await fetch(url, {
+    method,
+    headers:{
+      'Authorization':`Bearer ${CFG.token}`,
+      'Accept':'application/vnd.github+json',
+      'Content-Type':'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  return res;
+}
+
+function b64EncodeUnicode(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+    (m,p1)=>String.fromCharCode('0x'+p1)));
+}
+function b64DecodeUnicode(str){
+  return decodeURIComponent(atob(str).split('').map(c=>
+    '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+
+async function loadData(){
+  const res = await ghRequest('GET');
+  if(res.status === 404){
+    DATA = { goals: [], tasks: [], logs: {} };
+    SHA = null;
+    await saveData('Initialize tracker data');
+    return;
+  }
+  if(!res.ok) throw new Error('GitHub error '+res.status);
+  const json = await res.json();
+  SHA = json.sha;
+  DATA = JSON.parse(b64DecodeUnicode(json.content));
+  DATA.goals = DATA.goals || [];
+  DATA.tasks = DATA.tasks || [];
+  DATA.logs = DATA.logs || {};
+}
+
+async function saveData(message){
+  const body = {
+    message: message || `Update tracker ${todayStr()}`,
+    content: b64EncodeUnicode(JSON.stringify(DATA, null, 2))
+  };
+  if(SHA) body.sha = SHA;
+  const res = await ghRequest('PUT', body);
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.message || ('Save failed: '+res.status));
+  }
+  const json = await res.json();
+  SHA = json.content.sha;
+  flashSaved();
+}
+
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>saveData().catch(showSaveError), 600);
+}
+
+function flashSaved(){
+  const el = document.getElementById('saveStatus');
+  el.textContent = 'Saved';
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 1500);
+}
+function showSaveError(e){
+  const el = document.getElementById('saveStatus');
+  el.textContent = 'Save failed — retry?';
+  el.classList.add('show');
+  el.onclick = ()=>saveData().catch(showSaveError);
+}
+
+/* ---------------- Setup ---------------- */
+function connectGitHub(){
+  const token = document.getElementById('ghToken').value.trim();
+  const owner = document.getElementById('ghOwner').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  const path = document.getElementById('ghPath').value.trim() || 'data/tracker.json';
+  const errEl = document.getElementById('setupError');
+  errEl.style.display = 'none';
+  if(!token || !owner || !repo){
+    errEl.textContent = 'Fill in token, owner, and repo.';
+    errEl.style.display = 'block';
+    return;
+  }
+  CFG = { token, owner, repo, path };
+  loadData().then(()=>{
+    localStorage.setItem('chainCfg', JSON.stringify(CFG));
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderAll();
+  }).catch(e=>{
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  });
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  viewDate = todayStr();
+  document.getElementById('todayDate').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric'});
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{ /* offline shell just won't be available */ });
+  }
+  const saved = localStorage.getItem('chainCfg');
+  if(saved){
+    CFG = JSON.parse(saved);
+    loadData().then(()=>{
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      renderAll();
+    }).catch(e=>{
+      document.getElementById('setup').style.display = 'block';
+      document.getElementById('setupError').textContent = 'Reconnect: ' + e.message;
+      document.getElementById('setupError').style.display = 'block';
+    });
+  }
+});
+
+/* ---------------- Tabs ---------------- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  ['today','week','goals','manage'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = (t===name)? 'block':'none';
+  });
+}
+
+function renderAll(){
+  renderToday();
+  renderWeek();
+  renderGoals();
+  renderManage();
+}
+
+/* ---------------- Streak calc ---------------- */
+function getStreak(taskId){
+  let streak = 0, longest = 0, cur = 0;
+  // walk backward from today
+  let d = 0;
+  let counting = true;
+  const t = todayStr();
+  const todayDone = !!(DATA.logs[t] && DATA.logs[t][taskId]);
+  let startOffset = todayDone ? 0 : -1; // if today not done yet, don't break streak, start from yesterday
+  let offset = startOffset;
+  while(true){
+    const ds = dateStrOffset(offset);
+    const done = !!(DATA.logs[ds] && DATA.logs[ds][taskId]);
+    if(done){ streak++; offset--; }
+    else break;
+    if(streak > 3650) break; // safety
+  }
+  return streak;
+}
+
+function getLast30(taskId){
+  const arr = [];
+  for(let i=-29;i<=0;i++){
+    const ds = dateStrOffset(i);
+    arr.push({date:ds, done: !!(DATA.logs[ds] && DATA.logs[ds][taskId])});
+  }
+  return arr;
+}
+
+function toggleTaskOn(taskId, dateStr){
+  DATA.logs[dateStr] = DATA.logs[dateStr] || {};
+  DATA.logs[dateStr][taskId] = !DATA.logs[dateStr][taskId];
+  renderAll();
+  queueSave();
+}
+function toggleTask(taskId){
+  toggleTaskOn(taskId, viewDate);
+}
+function changeViewDate(deltaDays){
+  const d = new Date(viewDate + 'T00:00:00');
+  d.setDate(d.getDate() + deltaDays);
+  viewDate = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  renderToday();
+}
+function jumpToToday(){
+  viewDate = todayStr();
+  renderToday();
+}
+
+/* ---------------- Render: Today ---------------- */
+function renderToday(){
+  const el = document.getElementById('tab-today');
+  const dailyTasks = DATA.tasks.filter(x=>x.type==='daily');
+  const avoidTasks = DATA.tasks.filter(x=>x.type==='avoid');
+  const t = viewDate;
+  const isToday = t === todayStr();
+  const doneCount = dailyTasks.filter(x=>DATA.logs[t] && DATA.logs[t][x.id]).length;
+  const pct = dailyTasks.length ? Math.round(doneCount/dailyTasks.length*100) : 0;
+  const viewLabel = new Date(t+'T00:00:00').toLocaleDateString(undefined,{weekday:'short', month:'short', day:'numeric'});
+
+  let html = '';
+
+  html += `<div class="day-nav">
+    <button onclick="changeViewDate(-1)" aria-label="Previous day">←</button>
+    <div class="viewing-label">${isToday ? 'Viewing today' : 'Editing '+viewLabel}</div>
+    ${isToday ? '' : `<button class="today-pill" onclick="jumpToToday()">Jump to today</button>`}
+    <button onclick="changeViewDate(1)" aria-label="Next day" ${t>=todayStr() ? 'disabled style="opacity:.3;cursor:default;"' : ''}>→</button>
+  </div>`;
+
+  html += `<div class="card">
+    <div class="today-summary">
+      <div class="ring" style="background:conic-gradient(var(--ember) ${pct*3.6}deg, var(--surface-2) 0deg);">
+        <span>${doneCount}/${dailyTasks.length}</span>
+      </div>
+      <div class="label">Non-negotiables done ${isToday ? 'today' : 'on '+viewLabel}</div>
+    </div>`;
+
+  if(dailyTasks.length === 0){
+    html += `<div class="empty">No daily non-negotiables yet. Add some in the Manage tab.</div>`;
+  } else {
+    dailyTasks.forEach(task=>{
+      const done = !!(DATA.logs[t] && DATA.logs[t][task.id]);
+      const streak = getStreak(task.id);
+      const goal = DATA.goals.find(g=>g.id===task.goalId);
+      const last30 = getLast30(task.id);
+      html += `<div class="task-row">
+        <div class="check ${done?'done':''}" tabindex="0" role="checkbox" aria-checked="${done}" onclick="toggleTask('${task.id}')" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleTask('${task.id}')}">${done?'✓':''}</div>
+        <div class="task-info">
+          <div class="title">${escapeHtml(task.title)}</div>
+          ${goal ? `<div class="goal-tag">→ ${escapeHtml(goal.title)}</div>` : ''}
+          <div class="chain-links">${last30.map(d=>`<div class="link ${d.done?'lit':''}"></div>`).join('')}</div>
+        </div>
+        <div class="streak-badge">${streak} day${streak===1?'':'s'}</div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  if(avoidTasks.length){
+    html += `<div class="card"><h2>Staying Clean</h2><div class="counter-grid">`;
+    avoidTasks.forEach(task=>{
+      const streak = getStreak(task.id);
+      const doneOnViewDate = !!(DATA.logs[t] && DATA.logs[t][task.id]);
+      const brokenToday = streak === 0 && !(DATA.logs[todayStr()] && DATA.logs[todayStr()][task.id]);
+      html += `<div class="counter-card">
+        <div class="num ${brokenToday?'broken':''}">${streak}</div>
+        <div class="lbl">days ${escapeHtml(task.title)}-free</div>
+        <button class="btn-ghost" style="width:100%; margin-top:10px; font-size:12px;" onclick="toggleTask('${task.id}')">
+          ${doneOnViewDate ? '✓ Marked clean' : (isToday ? 'Mark today clean' : 'Mark '+viewLabel+' clean')}
+        </button>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+/* ---------------- Render: Week ---------------- */
+function renderWeek(){
+  const el = document.getElementById('tab-week');
+  const days = [];
+  for(let i=-6;i<=0;i++){
+    const ds = dateStrOffset(i);
+    days.push({ date: ds, label: new Date(ds+'T00:00:00').toLocaleDateString(undefined,{weekday:'short'}), num: new Date(ds+'T00:00:00').getDate() });
+  }
+  const allTasks = DATA.tasks;
+  let html = `<div class="card"><h2>This Week</h2>`;
+
+  if(allTasks.length === 0){
+    html += `<div class="empty">Add some tasks in the Manage tab to see your week.</div></div>`;
+    el.innerHTML = html;
+    return;
+  }
+
+  html += `<div class="week-scroll" style="overflow-x:auto;"><table class="week-table"><thead><tr><th style="text-align:left;">Task</th>`;
+  days.forEach(d=>{
+    html += `<th>${d.label}<br>${d.num}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  allTasks.forEach(task=>{
+    const goal = DATA.goals.find(g=>g.id===task.goalId);
+    html += `<tr><td class="week-task-name">${escapeHtml(task.title)}${goal?`<span class="goal-tag">→ ${escapeHtml(goal.title)}</span>`:''}</td>`;
+    days.forEach(d=>{
+      const done = !!(DATA.logs[d.date] && DATA.logs[d.date][task.id]);
+      const isTodayCol = d.date === todayStr();
+      html += `<td><div class="week-cell ${done?'done':''} ${task.type==='avoid'?'avoid':''} ${isTodayCol?'today-col':''}"
+        role="checkbox" aria-checked="${done}" tabindex="0"
+        onclick="toggleTaskOn('${task.id}','${d.date}')"
+        onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleTaskOn('${task.id}','${d.date}')}">${done?'✓':''}</div></td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  const dailyTasks = DATA.tasks.filter(x=>x.type==='daily');
+  if(dailyTasks.length){
+    let doneTotal = 0;
+    days.forEach(d=>{ dailyTasks.forEach(task=>{ if(DATA.logs[d.date] && DATA.logs[d.date][task.id]) doneTotal++; }); });
+    const weekPct = Math.round(doneTotal/(dailyTasks.length*7)*100);
+    html += `<div class="week-rate">${weekPct}% of non-negotiables completed this week (${doneTotal}/${dailyTasks.length*7})</div>`;
+  }
+
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+/* ---------------- Render: Goals ---------------- */
+function renderGoals(){
+  const el = document.getElementById('tab-goals');
+  let html = '<div class="card"><h2>Overarching Goals</h2>';
+  if(DATA.goals.length === 0){
+    html += `<div class="empty">No goals yet. Add one in the Manage tab.</div>`;
+  } else {
+    DATA.goals.forEach(goal=>{
+      const history = goal.history || [];
+      const current = history.length ? history[history.length-1].value : goal.startValue;
+      let pct = 0;
+      if(goal.startValue !== undefined && goal.target !== undefined && current !== undefined){
+        const total = Math.abs(goal.target - goal.startValue);
+        const done = Math.abs(current - goal.startValue);
+        pct = total ? Math.min(100, Math.round(done/total*100)) : 0;
+      }
+      const linkedTasks = DATA.tasks.filter(t=>t.goalId===goal.id);
+      html += `<div class="goal-card">
+        <div class="goal-head">
+          <h3>${escapeHtml(goal.title)}</h3>
+          <div class="goal-metric">${current !== undefined ? current+' '+ (goal.unit||'') : ''} ${goal.target!==undefined ? '→ '+goal.target+' '+(goal.unit||'') : ''}</div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+        ${linkedTasks.length ? `<div style="font-size:12px; color:var(--text-dim); margin-top:8px;">Fed by: ${linkedTasks.map(t=>escapeHtml(t.title)).join(', ')}</div>` : ''}
+        <div class="goal-update">
+          <input type="number" step="any" placeholder="Log new value" id="goalInput_${goal.id}">
+          <button class="btn-ghost" onclick="logGoalValue('${goal.id}')">Log</button>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+function logGoalValue(goalId){
+  const input = document.getElementById('goalInput_'+goalId);
+  const val = parseFloat(input.value);
+  if(isNaN(val)) return;
+  const goal = DATA.goals.find(g=>g.id===goalId);
+  goal.history = goal.history || [];
+  goal.history.push({date: todayStr(), value: val});
+  input.value = '';
+  renderAll();
+  queueSave();
+}
+
+/* ---------------- Render: Manage ---------------- */
+function renderManage(){
+  const el = document.getElementById('tab-manage');
+  let html = `<div class="card"><h2>Goals</h2>`;
+  html += DATA.goals.map(g=>`
+    <div class="task-row">
+      <div class="task-info"><div class="title">${escapeHtml(g.title)}</div>
+      <div class="goal-tag">${g.startValue ?? ''} → ${g.target ?? ''} ${g.unit||''}</div></div>
+      <button class="btn-ghost" onclick="deleteGoal('${g.id}')">Remove</button>
+    </div>`).join('') || `<div class="empty">No goals yet.</div>`;
+  html += `<div class="add-task-form">
+    <input type="text" id="newGoalTitle" placeholder="Goal (e.g. Run a 5k under 35:00)">
+    <input type="number" step="any" id="newGoalStart" placeholder="Start value">
+    <input type="number" step="any" id="newGoalTarget" placeholder="Target value">
+    <input type="text" id="newGoalUnit" placeholder="Unit (lbs, min, etc)">
+    <button class="btn-primary" onclick="addGoal()">Add Goal</button>
+  </div></div>`;
+
+  html += `<div class="card"><h2>Daily Non-Negotiables & Habits to Avoid</h2>`;
+  html += DATA.tasks.map(t=>{
+    const goal = DATA.goals.find(g=>g.id===t.goalId);
+    return `<div class="task-row">
+      <div class="task-info"><div class="title">${escapeHtml(t.title)}</div>
+      <div class="goal-tag">${t.type==='avoid'?'Avoid / abstain':'Daily task'}${goal?' · → '+escapeHtml(goal.title):''}</div></div>
+      <button class="btn-ghost" onclick="deleteTask('${t.id}')">Remove</button>
+    </div>`;
+  }).join('') || `<div class="empty">No tasks yet.</div>`;
+
+  const goalOptions = `<option value="">No linked goal</option>` + DATA.goals.map(g=>`<option value="${g.id}">${escapeHtml(g.title)}</option>`).join('');
+  html += `<div class="add-task-form">
+    <input type="text" id="newTaskTitle" placeholder="e.g. Run 1 mile / Nicotine / Weight lifting">
+    <select id="newTaskType">
+      <option value="daily">Daily non-negotiable</option>
+      <option value="avoid">Substance/habit to avoid</option>
+    </select>
+    <select id="newTaskGoal">${goalOptions}</select>
+    <button class="btn-primary" onclick="addTask()">Add</button>
+  </div></div>`;
+
+  el.innerHTML = html;
+}
+
+function addGoal(){
+  const title = document.getElementById('newGoalTitle').value.trim();
+  if(!title) return;
+  const start = parseFloat(document.getElementById('newGoalStart').value);
+  const target = parseFloat(document.getElementById('newGoalTarget').value);
+  const unit = document.getElementById('newGoalUnit').value.trim();
+  DATA.goals.push({
+    id: 'goal_'+Date.now(),
+    title, unit,
+    startValue: isNaN(start)?undefined:start,
+    target: isNaN(target)?undefined:target,
+    history: []
+  });
+  ['newGoalTitle','newGoalStart','newGoalTarget','newGoalUnit'].forEach(id=>document.getElementById(id).value='');
+  renderAll();
+  queueSave();
+}
+function deleteGoal(id){
+  DATA.goals = DATA.goals.filter(g=>g.id!==id);
+  DATA.tasks.forEach(t=>{ if(t.goalId===id) t.goalId = null; });
+  renderAll();
+  queueSave();
+}
+function addTask(){
+  const title = document.getElementById('newTaskTitle').value.trim();
+  if(!title) return;
+  const type = document.getElementById('newTaskType').value;
+  const goalId = document.getElementById('newTaskGoal').value || null;
+  DATA.tasks.push({ id:'task_'+Date.now(), title, type, goalId });
+  document.getElementById('newTaskTitle').value = '';
+  renderAll();
+  queueSave();
+}
+function deleteTask(id){
+  DATA.tasks = DATA.tasks.filter(t=>t.id!==id);
+  renderAll();
+  queueSave();
+}
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
