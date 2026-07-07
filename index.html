@@ -153,12 +153,34 @@
   .chart-dot.active{r:4.5; fill:var(--gold);}
   .goal-history{margin-top:10px; border-top:1px solid var(--border); padding-top:8px;}
   .goal-history-row{
-    display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim);
+    display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--text-dim);
     font-family:'JetBrains Mono'; padding:3px 6px; border-radius:4px;
   }
   .goal-history-row span:last-child{color:var(--text);}
   .goal-history-row.active{background:var(--surface-2); color:var(--text);}
   .goal-history-row.active span:last-child{color:var(--gold);}
+  .goal-history-row .row-main{display:flex; justify-content:space-between; flex:1; gap:8px;}
+  .goal-history-row .history-delete{
+    opacity:0; width:18px; height:18px; margin-left:6px; padding:0; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    background:transparent; border:none; color:var(--text-dim); font-size:14px; line-height:1;
+    border-radius:4px; cursor:pointer;
+  }
+  .goal-history-row:hover .history-delete{opacity:1;}
+  .goal-history-row .history-delete:hover{color:var(--brick); background:var(--surface-2);}
+
+  .confirm-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:1000;
+  }
+  .confirm-box{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    max-width:320px; width:100%; padding:18px;
+  }
+  .confirm-box p{margin:0 0 16px; font-size:14px; color:var(--text);}
+  .confirm-actions{display:flex; gap:8px; justify-content:flex-end;}
+  .btn-danger{background:var(--brick); color:var(--text);}
+  .btn-danger:hover{background:#A34444;}
 
   .day-nav{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
   .day-nav button{background:var(--surface-2); color:var(--text); padding:6px 12px; border:1px solid var(--border);}
@@ -230,6 +252,16 @@
 </div>
 
 <div id="saveStatus">Saved</div>
+
+<div id="confirmOverlay" class="confirm-overlay" style="display:none;">
+  <div class="confirm-box">
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button class="btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" id="confirmOkBtn">Delete</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const API = 'https://api.github.com';
@@ -672,9 +704,28 @@ function renderGoalHistoryList(goal){
   if(!history.length) return '';
   const start = Math.max(0, history.length - 5);
   const entries = history.slice(start).map((pt,offset)=>({pt, idx: start+offset})).reverse().map(({pt,idx})=>
-    `<div class="goal-history-row" data-goal="${goal.id}" data-idx="${idx}"><span>${formatLogTimestamp(pt)}</span><span>${pt.value}${goal.unit?' '+escapeHtml(goal.unit):''}</span></div>`
+    `<div class="goal-history-row" data-goal="${goal.id}" data-idx="${idx}">
+      <span class="row-main"><span>${formatLogTimestamp(pt)}</span><span>${pt.value}${goal.unit?' '+escapeHtml(goal.unit):''}</span></span>
+      <button class="history-delete" aria-label="Delete entry" onclick="confirmDeleteGoalHistoryEntry('${goal.id}',${idx})">&times;</button>
+    </div>`
   ).join('');
   return `<div class="goal-history">${entries}</div>`;
+}
+
+function confirmDeleteGoalHistoryEntry(goalId, idx){
+  const goal = DATA.goals.find(g=>g.id===goalId);
+  if(!goal || !goal.history || !goal.history[idx]) return;
+  const pt = goal.history[idx];
+  const label = `${formatLogTimestamp(pt)}: ${pt.value}${goal.unit?' '+goal.unit:''}`;
+  showConfirm(`Delete log entry "${label}"? This can't be undone.`, ()=>deleteGoalHistoryEntry(goalId, idx));
+}
+
+function deleteGoalHistoryEntry(goalId, idx){
+  const goal = DATA.goals.find(g=>g.id===goalId);
+  if(!goal || !goal.history) return;
+  goal.history.splice(idx, 1);
+  renderAll();
+  queueSave();
 }
 
 function logGoalValue(goalId){
@@ -807,6 +858,19 @@ function saveTask(id){
 
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- Confirm modal ---------------- */
+function showConfirm(message, onConfirm){
+  document.getElementById('confirmMessage').textContent = message;
+  const okBtn = document.getElementById('confirmOkBtn');
+  const newOkBtn = okBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+  newOkBtn.addEventListener('click', ()=>{ closeConfirm(); onConfirm(); });
+  document.getElementById('confirmOverlay').style.display = 'flex';
+}
+function closeConfirm(){
+  document.getElementById('confirmOverlay').style.display = 'none';
 }
 </script>
 </body>
