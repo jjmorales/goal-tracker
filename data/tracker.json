@@ -27,6 +27,12 @@
       "title": "1 Gallon of Water",
       "type": "daily",
       "goalId": "goal_1783398135546"
+    },
+    {
+      "id": "task_1783398225799",
+      "title": "No eating out",
+      "type": "avoid",
+      "goalId": "goal_1783398135546"
     }
   ],
   "logs": {}
