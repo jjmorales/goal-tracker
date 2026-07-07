@@ -43,14 +43,20 @@ function chainPath(ctx, cx, cy, ringW, ringH, strokeW, gap, borderW) {
   });
 }
 
-function renderIcon(size, { maskable }) {
+function renderIcon(size, { maskable, opaqueBg }) {
   const canvas = createCanvas(size, size);
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, size, size);
 
-  // Maskable icons need content inside the safe zone (center 80% circle),
-  // so scale the glyph down a bit more for that variant.
-  const fill = maskable ? 0.62 : 0.82;
+  if (opaqueBg) {
+    ctx.fillStyle = BORDER;
+    ctx.fillRect(0, 0, size, size);
+  }
+
+  // Maskable/opaque-background icons need padding (maskable for the safe
+  // zone, opaque so it doesn't read edge-to-edge like an iOS icon shouldn't),
+  // so scale the glyph down a bit more for those variants.
+  const fill = maskable || opaqueBg ? 0.62 : 0.82;
   const ringH = size * fill;
   const ringW = ringH * 0.62;
   const strokeW = ringW * 0.34;
@@ -74,3 +80,8 @@ function write(canvas, name) {
 write(renderIcon(512, { maskable: false }), 'icon-512.png');
 write(renderIcon(192, { maskable: false }), 'icon-192.png');
 write(renderIcon(512, { maskable: true }), 'icon-512-maskable.png');
+
+// iOS ignores transparency on home-screen icons (fills it with white/black),
+// so apple-touch-icon needs its own opaque, padded variant. Not referenced
+// by the manifest or the <link rel="icon"> favicon, so Chrome is unaffected.
+write(renderIcon(180, { opaqueBg: true }), 'apple-touch-icon.png');
