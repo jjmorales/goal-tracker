@@ -231,6 +231,7 @@ let CFG = null;
 let DATA = null;
 let SHA = null;
 let saveTimer = null;
+let editingTaskId = null;
 let viewDate = null; // date currently shown/edited on the Today tab; defaults to today
 
 function todayStr(){
@@ -613,16 +614,30 @@ function renderManage(){
   </div></div>`;
 
   html += `<div class="card"><h2>Daily Non-Negotiables & Habits to Avoid</h2>`;
+  const goalOptions = `<option value="">No linked goal</option>` + DATA.goals.map(g=>`<option value="${g.id}">${escapeHtml(g.title)}</option>`).join('');
   html += DATA.tasks.map(t=>{
+    if(t.id === editingTaskId){
+      const editGoalOptions = `<option value="">No linked goal</option>` + DATA.goals.map(g=>`<option value="${g.id}" ${g.id===t.goalId?'selected':''}>${escapeHtml(g.title)}</option>`).join('');
+      return `<div class="task-row add-task-form">
+        <input type="text" id="editTaskTitle" value="${escapeHtml(t.title)}">
+        <select id="editTaskType">
+          <option value="daily" ${t.type==='daily'?'selected':''}>Daily non-negotiable</option>
+          <option value="avoid" ${t.type==='avoid'?'selected':''}>Substance/habit to avoid</option>
+        </select>
+        <select id="editTaskGoal">${editGoalOptions}</select>
+        <button class="btn-primary" onclick="saveTask('${t.id}')">Save</button>
+        <button class="btn-ghost" onclick="cancelEditTask()">Cancel</button>
+      </div>`;
+    }
     const goal = DATA.goals.find(g=>g.id===t.goalId);
     return `<div class="task-row">
       <div class="task-info"><div class="title">${escapeHtml(t.title)}</div>
       <div class="goal-tag">${t.type==='avoid'?'Avoid / abstain':'Daily task'}${goal?' · → '+escapeHtml(goal.title):''}</div></div>
+      <button class="btn-ghost" onclick="editTask('${t.id}')">Edit</button>
       <button class="btn-ghost" onclick="deleteTask('${t.id}')">Remove</button>
     </div>`;
   }).join('') || `<div class="empty">No tasks yet.</div>`;
 
-  const goalOptions = `<option value="">No linked goal</option>` + DATA.goals.map(g=>`<option value="${g.id}">${escapeHtml(g.title)}</option>`).join('');
   html += `<div class="add-task-form">
     <input type="text" id="newTaskTitle" placeholder="e.g. Run 1 mile / Nicotine / Weight lifting">
     <select id="newTaskType">
@@ -671,6 +686,26 @@ function addTask(){
 }
 function deleteTask(id){
   DATA.tasks = DATA.tasks.filter(t=>t.id!==id);
+  renderAll();
+  queueSave();
+}
+function editTask(id){
+  editingTaskId = id;
+  renderManage();
+}
+function cancelEditTask(){
+  editingTaskId = null;
+  renderManage();
+}
+function saveTask(id){
+  const task = DATA.tasks.find(t=>t.id===id);
+  if(!task) return;
+  const title = document.getElementById('editTaskTitle').value.trim();
+  if(!title) return;
+  task.title = title;
+  task.type = document.getElementById('editTaskType').value;
+  task.goalId = document.getElementById('editTaskGoal').value || null;
+  editingTaskId = null;
   renderAll();
   queueSave();
 }
