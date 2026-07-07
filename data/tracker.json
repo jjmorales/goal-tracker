@@ -1,5 +1,14 @@
 {
-  "goals": [],
+  "goals": [
+    {
+      "id": "goal_1783398135546",
+      "title": "Cut to 130 lbs",
+      "unit": "Weight (lbs)",
+      "startValue": 170,
+      "target": 130,
+      "history": []
+    }
+  ],
   "tasks": [],
   "logs": {}
 }
