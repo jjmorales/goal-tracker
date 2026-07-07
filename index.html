@@ -141,6 +141,20 @@
     flex:1; padding:8px 10px; background:var(--surface-2); border:1px solid var(--border);
     border-radius:6px; color:var(--text); font-size:13px; font-family:'JetBrains Mono';
   }
+  .goal-chart{margin-top:10px;}
+  .goal-chart svg{width:100%; height:auto; display:block; overflow:visible;}
+  .goal-chart .chart-axis-label{font-family:'JetBrains Mono'; font-size:7px; fill:var(--text-dim);}
+  .chart-pt{cursor:pointer;}
+  .chart-dot{transition:r .1s ease;}
+  .chart-dot.active{r:4.5; fill:var(--gold);}
+  .goal-history{margin-top:10px; border-top:1px solid var(--border); padding-top:8px;}
+  .goal-history-row{
+    display:flex; justify-content:space-between; font-size:11px; color:var(--text-dim);
+    font-family:'JetBrains Mono'; padding:3px 6px; border-radius:4px;
+  }
+  .goal-history-row span:last-child{color:var(--text);}
+  .goal-history-row.active{background:var(--surface-2); color:var(--text);}
+  .goal-history-row.active span:last-child{color:var(--gold);}
 
   .day-nav{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
   .day-nav button{background:var(--surface-2); color:var(--text); padding:6px 12px; border:1px solid var(--border);}
@@ -363,7 +377,27 @@ window.addEventListener('DOMContentLoaded', ()=>{
       document.getElementById('setupError').style.display = 'block';
     });
   }
+  initGoalChartHover();
 });
+
+function initGoalChartHover(){
+  const container = document.getElementById('tab-goals');
+  const setActive = (goalId, idx, on)=>{
+    container.querySelectorAll(`[data-goal="${goalId}"][data-idx="${idx}"]`).forEach(el=>{
+      el.classList.toggle('active', on);
+    });
+  };
+  container.addEventListener('mouseover', e=>{
+    const target = e.target.closest('[data-goal][data-idx]');
+    if(!target) return;
+    setActive(target.dataset.goal, target.dataset.idx, true);
+  });
+  container.addEventListener('mouseout', e=>{
+    const target = e.target.closest('[data-goal][data-idx]');
+    if(!target) return;
+    setActive(target.dataset.goal, target.dataset.idx, false);
+  });
+}
 
 /* ---------------- Tabs ---------------- */
 function switchTab(name){
@@ -572,15 +606,81 @@ function renderGoals(){
         </div>
         <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
         ${linkedTasks.length ? `<div style="font-size:12px; color:var(--text-dim); margin-top:8px;">Fed by: ${linkedTasks.map(t=>escapeHtml(t.title)).join(', ')}</div>` : ''}
+        ${renderGoalChart(goal)}
         <div class="goal-update">
           <input type="number" step="any" placeholder="Log new value" id="goalInput_${goal.id}">
           <button class="btn-ghost" onclick="logGoalValue('${goal.id}')">Log</button>
         </div>
+        ${renderGoalHistoryList(goal)}
       </div>`;
     });
   }
   html += `</div>`;
   el.innerHTML = html;
+}
+
+function renderGoalChart(goal){
+  const history = goal.history || [];
+  if(history.length < 2) return '';
+  const unit = goal.unit ? ' '+goal.unit : '';
+  const w = 300, h = 130;
+  const padL = 34, padR = 8, padT = 16, padB = 18;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const values = history.map(pt=>pt.value);
+  let min = Math.min(...values), max = Math.max(...values);
+  if(min === max){ min -= 1; max += 1; }
+  const stepX = plotW / (history.length - 1);
+  const xy = history.map((pt,i)=>({
+    x: padL + i*stepX,
+    y: padT + plotH - ((pt.value - min)/(max - min))*plotH,
+    pt, i
+  }));
+  const points = xy.map(p=>`${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ');
+  const first = xy[0];
+
+  const fmtVal = v => Number.isInteger(v) ? v : Math.round(v*100)/100;
+
+  const dots = xy.map(p=>
+    `<circle class="chart-pt" data-goal="${goal.id}" data-idx="${p.i}"
+      cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="6" fill="transparent">
+      <title>${formatLogTimestamp(p.pt)}: ${fmtVal(p.pt.value)}${unit}</title>
+    </circle>
+    <circle class="chart-dot" data-goal="${goal.id}" data-idx="${p.i}"
+      cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="2.5" fill="var(--ember)"/>`
+  ).join('');
+
+  return `<div class="goal-chart">
+    <svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Progress chart for ${escapeHtml(goal.title)}">
+      <text x="0" y="${padT + 3}" class="chart-axis-label" text-anchor="start">${fmtVal(max)}${unit}</text>
+      <text x="0" y="${padT + plotH}" class="chart-axis-label" text-anchor="start">${fmtVal(min)}${unit}</text>
+      <polyline points="${points}" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      <text x="${first.x}" y="${h-4}" class="chart-axis-label" text-anchor="start">${formatLogTimestamp(first.pt, true)}</text>
+      <text x="${xy[xy.length-1].x}" y="${h-4}" class="chart-axis-label" text-anchor="end">${formatLogTimestamp(xy[xy.length-1].pt, true)}</text>
+    </svg>
+  </div>`;
+}
+
+function formatLogTimestamp(pt, short){
+  if(pt.time){
+    const d = new Date(pt.time);
+    if(!isNaN(d)){
+      return short
+        ? d.toLocaleDateString(undefined,{month:'short',day:'numeric'})
+        : d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    }
+  }
+  return pt.date;
+}
+
+function renderGoalHistoryList(goal){
+  const history = goal.history || [];
+  if(!history.length) return '';
+  const start = Math.max(0, history.length - 5);
+  const entries = history.slice(start).map((pt,offset)=>({pt, idx: start+offset})).reverse().map(({pt,idx})=>
+    `<div class="goal-history-row" data-goal="${goal.id}" data-idx="${idx}"><span>${formatLogTimestamp(pt)}</span><span>${pt.value}${goal.unit?' '+escapeHtml(goal.unit):''}</span></div>`
+  ).join('');
+  return `<div class="goal-history">${entries}</div>`;
 }
 
 function logGoalValue(goalId){
@@ -589,7 +689,8 @@ function logGoalValue(goalId){
   if(isNaN(val)) return;
   const goal = DATA.goals.find(g=>g.id===goalId);
   goal.history = goal.history || [];
-  goal.history.push({date: todayStr(), value: val});
+  const now = new Date();
+  goal.history.push({date: todayStr(), time: now.toISOString(), value: val});
   input.value = '';
   renderAll();
   queueSave();
