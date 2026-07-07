@@ -1,0 +1,65 @@
+{
+  "goals": [
+    {
+      "id": "goal_1783398135546",
+      "title": "Cut to 130 lbs",
+      "unit": "Weight (lbs)",
+      "startValue": 170,
+      "target": 130,
+      "history": [
+        {
+          "date": "2026-07-07",
+          "value": 168
+        },
+        {
+          "date": "2026-07-07",
+          "value": 170
+        },
+        {
+          "date": "2026-07-07",
+          "value": 145
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_1783398150646",
+      "title": "Run 1 Mile",
+      "type": "daily",
+      "goalId": "goal_1783398135546"
+    },
+    {
+      "id": "task_1783398173884",
+      "title": "Weightlift for at least 30 minutes",
+      "type": "daily",
+      "goalId": "goal_1783398135546"
+    },
+    {
+      "id": "task_1783398198789",
+      "title": "1 Gallon of Water",
+      "type": "daily",
+      "goalId": "goal_1783398135546"
+    },
+    {
+      "id": "task_1783398225799",
+      "title": "No eating out",
+      "type": "avoid",
+      "goalId": "goal_1783398135546"
+    }
+  ],
+  "logs": {
+    "2026-07-07": {
+      "task_1783398150646": false,
+      "task_1783398173884": false,
+      "task_1783398198789": false,
+      "task_1783398225799": false
+    },
+    "2026-07-06": {
+      "task_1783398150646": false,
+      "task_1783398173884": false,
+      "task_1783398198789": false,
+      "task_1783398225799": false
+    }
+  }
+}
