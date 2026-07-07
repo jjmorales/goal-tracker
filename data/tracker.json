@@ -21,6 +21,12 @@
       "title": "Weightlift for at least 30 minutes",
       "type": "daily",
       "goalId": "goal_1783398135546"
+    },
+    {
+      "id": "task_1783398198789",
+      "title": "1 Gallon of Water",
+      "type": "daily",
+      "goalId": "goal_1783398135546"
     }
   ],
   "logs": {}
