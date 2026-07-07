@@ -6,12 +6,7 @@
       "unit": "Weight (lbs)",
       "startValue": 170,
       "target": 130,
-      "history": [
-        {
-          "date": "2026-07-07",
-          "value": 168
-        }
-      ]
+      "history": []
     }
   ],
   "tasks": [
