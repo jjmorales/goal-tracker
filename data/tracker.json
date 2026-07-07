@@ -15,6 +15,12 @@
       "title": "Run 1 Mile",
       "type": "daily",
       "goalId": "goal_1783398135546"
+    },
+    {
+      "id": "task_1783398173884",
+      "title": "Weightlift for at least 30 minutes",
+      "type": "daily",
+      "goalId": "goal_1783398135546"
     }
   ],
   "logs": {}
