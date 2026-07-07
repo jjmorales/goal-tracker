@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#17181A">
+<link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
@@ -201,22 +202,10 @@
 <body>
 
 <div id="setup">
-  <h1>The Chain</h1>
-  <p>Connects to a JSON file in your own GitHub repo — same pattern as the cookbook app. Nothing leaves your browser except direct calls to GitHub's API.</p>
+  <h1>Goal Tracker</h1>
+  <p>Create a fine-grained GitHub Personal Access Token (Settings → Developer settings → Personal access tokens → Fine-grained tokens) scoped to this repo with <strong>Contents: Read and write</strong> permission, then paste it below.</p>
   <label for="ghToken">Personal Access Token</label>
   <input id="ghToken" type="password" placeholder="ghp_...">
-  <div class="row">
-    <div>
-      <label for="ghOwner">Repo owner</label>
-      <input id="ghOwner" type="text" placeholder="jonathan">
-    </div>
-    <div>
-      <label for="ghRepo">Repo name</label>
-      <input id="ghRepo" type="text" placeholder="portfolio">
-    </div>
-  </div>
-  <label for="ghPath">Data file path</label>
-  <input id="ghPath" type="text" placeholder="data/tracker.json" value="data/tracker.json">
   <button class="btn-primary" style="width:100%; margin-top:20px;" onclick="connectGitHub()">Connect</button>
   <div id="setupError"></div>
 </div>
@@ -342,19 +331,20 @@ function showSaveError(e){
 }
 
 /* ---------------- Setup ---------------- */
+const REPO_OWNER = 'jjmorales';
+const REPO_NAME = 'goal-tracker';
+const REPO_DATA_PATH = 'data/tracker.json';
+
 function connectGitHub(){
   const token = document.getElementById('ghToken').value.trim();
-  const owner = document.getElementById('ghOwner').value.trim();
-  const repo = document.getElementById('ghRepo').value.trim();
-  const path = document.getElementById('ghPath').value.trim() || 'data/tracker.json';
   const errEl = document.getElementById('setupError');
   errEl.style.display = 'none';
-  if(!token || !owner || !repo){
-    errEl.textContent = 'Fill in token, owner, and repo.';
+  if(!token){
+    errEl.textContent = 'Paste your Personal Access Token.';
     errEl.style.display = 'block';
     return;
   }
-  CFG = { token, owner, repo, path };
+  CFG = { token, owner: REPO_OWNER, repo: REPO_NAME, path: REPO_DATA_PATH };
   loadData().then(()=>{
     localStorage.setItem('chainCfg', JSON.stringify(CFG));
     document.getElementById('setup').style.display = 'none';

@@ -12,15 +12,12 @@ Daily non-negotiables and streak tracking, tied to your bigger goals. Data lives
 
 ## Setup
 
-1. **Create this repo on GitHub** (public or private both work).
-2. **Push all these files** to the root of the repo.
-3. **Enable GitHub Pages**: Settings → Pages → Deploy from branch → `main` / root.
-4. **Generate a Personal Access Token**: GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens. Scope it to *this repo only*, with **Contents: Read and write** permission.
-5. Visit your Pages URL (e.g. `https://yourname.github.io/the-chain/`), and on first load enter:
-   - The token from step 4
-   - Your GitHub username (repo owner)
-   - This repo's name
-   - Data path: `data/tracker.json` (default — the app creates this file automatically on first connect)
+1. **Fork or create this repo on GitHub** (public or private both work).
+2. **Update the repo constants**: in `index.html`, set `REPO_OWNER` and `REPO_NAME` (near `connectGitHub`) to your GitHub username and this repo's name. `REPO_DATA_PATH` defaults to `data/tracker.json` — the app creates this file automatically on first connect.
+3. **Push all these files** to the root of the repo.
+4. **Enable GitHub Pages**: Settings → Pages → Deploy from branch → `main` / root.
+5. **Generate a Personal Access Token**: GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens. Scope it to *this repo only*, with **Contents: Read and write** permission.
+6. Visit your Pages URL (e.g. `https://yourname.github.io/the-chain/`), and on first load paste in the token from step 5.
 
 ## Files
 
