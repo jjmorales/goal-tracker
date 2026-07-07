@@ -9,6 +9,13 @@
       "history": []
     }
   ],
-  "tasks": [],
+  "tasks": [
+    {
+      "id": "task_1783398150646",
+      "title": "Run 1 Mile",
+      "type": "daily",
+      "goalId": "goal_1783398135546"
+    }
+  ],
   "logs": {}
 }
